@@ -1,0 +1,171 @@
+---
+title: "restData patch"
+output: html_document
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+In *Week 3* of the [Getting and Cleaning Data](https://www.coursera.org/learn/data-cleaning) Coursera course, the lectures *Summarizing Data* and *Creating New Variables* use a [link to a CSV](https://data.baltimorecity.gov/api/views/k5ry-ef3g/rows.csv?accessType=DOWNLOAD) file that no longer exists. Luckily, the link to the HTML data demonstrated on another slide was accessed and cached.
+
+Following this patch, it is possible recreate `restData` from this HTML.
+
+```{r}
+library(dplyr)
+library(rvest)
+
+# read restaurants.html into restData
+cache <- "https://github.com/oeryania/datasciencecoursera/raw/main/restaurants.html"
+restData <- cache %>% read_html %>% html_table %>% as.data.frame %>% mutate(.keep = "none",
+               name = as.factor(NAME),
+            zipCode = as.integer(sub("(.*)-$", "-\\1", ZIPCODE)),
+       neighborhood = as.factor(NGHBRHD),
+    councilDistrict = as.integer(CNCLDST),
+     policeDistrict = as.factor(PLCDST),
+         Location.1 = as.factor(paste(ADDRESS, "\n", CITY, ", ", STATE, "\n", sep = ""))
+    )
+```
+
+`restData` is now ready for further exploration, below.
+
+---
+
+<br><br><br><br>
+
+## Data Exploration
+### Summarizing Data
+
+#### Slide 4. Look at a bit of the data
+
+```{r}
+head(restData,n=3)
+```
+
+```{r}
+tail(restData,n=3)
+```
+
+#### Slide 5. Make summary
+
+```{r}
+summary(restData)
+```
+
+#### Slide 6. More in depth information
+
+```{r}
+str(restData)
+```
+
+#### Slide 7. Quantiles of quantitative variables
+
+```{r}
+quantile(restData$councilDistrict,na.rm=TRUE)
+```
+
+```{r}
+quantile(restData$councilDistrict,probs=c(0.5,0.75,0.9))
+```
+
+#### Slide 8. Make table
+
+```{r}
+table(restData$zipCode,useNA="ifany")
+```
+
+#### Slide 9. Make table
+
+```{r}
+table(restData$councilDistrict,restData$zipCode)
+```
+
+#### Slide 10. Check for missing values
+
+```{r}
+sum(is.na(restData$councilDistrict))
+```
+
+```{r}
+any(is.na(restData$councilDistrict))
+```
+
+```{r}
+all(restData$zipCode > 0)
+```
+
+#### Slide 11. Row and column sums
+
+```{r}
+colSums(is.na(restData))
+```
+
+```{r}
+all(colSums(is.na(restData))==0)
+```
+
+#### Slide 12. Value with specific characteristics
+
+```{r}
+table(restData$zipCode %in% c("21212"))
+```
+
+```{r}
+table(restData$zipCode %in% c("21212","21213"))
+```
+
+#### Slide 13. Value with specific characteristics
+
+```{r}
+restData[restData$zipCode %in% c("21212","21213"),]
+```
+
+### Creating New Variables
+
+#### Slide 6. Subsetting variables
+
+```{r}
+restData$nearMe = restData$neighborhood %in% c("Roland Park", "Homeland")
+table(restData$nearMe)
+```
+
+#### Slide 7. Creating binary variables
+
+```{r}
+restData$zipWrong = ifelse(restData$zipCode < 0, TRUE, FALSE)
+table(restData$zipWrong,restData$zipCode < 0)
+```
+
+#### Slide 8. Creating categorical variables
+```{r}
+restData$zipGroups = cut(restData$zipCode,breaks=quantile(restData$zipCode))
+table(restData$zipGroups)
+```
+
+```{r}
+table(restData$zipGroups,restData$zipCode)
+```
+
+#### Slide 9. Easier cutting
+```{r}
+library(Hmisc)
+restData$zipGroups = cut2(restData$zipCode,g=4)
+table(restData$zipGroups)
+```
+
+#### Slide 10. Creating factor variables
+```{r}
+restData$zcf <- factor(restData$zipCode)
+restData$zcf[1:10]
+```
+
+```{r}
+class(restData$zcf)
+```
+
+#### Slide 13. Using the mutate function
+```{r}
+restData2 = mutate(restData,zipGroups=cut2(zipCode,g=4))
+table(restData$zipGroups)
+```
