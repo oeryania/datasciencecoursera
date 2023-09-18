@@ -28,7 +28,7 @@ restData <- cache %>% read_html %>% html_table %>% as.data.frame %>% mutate(.kee
     )
 ```
 
-`restData` is now ready for further exploration, below.
+`restData` is now ready for further exploration.
 
 ---
 
