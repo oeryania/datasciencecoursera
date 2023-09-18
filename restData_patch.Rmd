@@ -20,7 +20,7 @@ library(rvest)
 cache <- "https://github.com/oeryania/datasciencecoursera/raw/main/restaurants.html"
 restData <- cache %>% read_html %>% html_table %>% as.data.frame %>% mutate(.keep = "none",
                name = as.factor(NAME),
-            zipCode = as.integer(sub("(.*)-$", "-\\1", ZIPCODE)),
+            zipCode = as.integer(sub("(.*)-$", "-\\1", ZIPCODE)), # simulate negative zipcode
        neighborhood = as.factor(NGHBRHD),
     councilDistrict = as.integer(CNCLDST),
      policeDistrict = as.factor(PLCDST),
